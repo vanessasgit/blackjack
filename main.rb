@@ -5,6 +5,7 @@ set :sessions, true
 
 BLACKJACK_AMOUNT = 21
 DEALER_MIN_HIT = 17
+TOTAL_POT = 750
 
 helpers do
    def calculate(arr)
@@ -52,19 +53,22 @@ helpers do
   def winner!(msg)
     @play_again = true
     @show_hit_or_hit_stay_buttons = false
-    @success = "<strong> #{session[:username]} wins!</strong> #{msg}"
+    @winner = "<strong> #{session[:username]} wins!</strong> #{msg}"
+    session['total'] += session['bet']
   end
 
   def loser!(msg)
     @play_again = true
     @show_hit_or_hit_stay_buttons = false
-    @error = "<strong> #{session[:username]} lost!</strong> #{msg}"
+    @loser = "<strong> #{session[:username]} lost!</strong> #{msg}"
+    session['total'] -= session['bet']
   end
 
   def tie!(msg)
     @play_again = true
-    @success = "<strong> #{session[:username]} tied!</strong> #{msg}"
+    @winner = "<strong> #{session[:username]} tied!</strong> #{msg}"
   end
+
 end
 
 before do
@@ -81,7 +85,8 @@ get '/' do
     
 end
 
-get '/set_name' do 
+get '/set_name' do
+  session['total'] = TOTAL_POT
   erb :set_name
 end
 
@@ -92,7 +97,33 @@ post '/set_name' do
   end
 
   session['username'] = params['username'] # saves the name before redirecting
-  redirect '/game'
+  redirect '/bet'
+end
+
+get '/bet' do
+  session['bet'] = nil
+  if session['total'] == 0
+    redirect '/game_over'
+  end
+  erb :bet
+end
+
+post '/bet' do
+  if params['bet'].empty?
+    @error = 'Bet is required'
+    halt erb(:bet)
+  elsif params['bet'].to_i > session['total']
+    @error = 'Umh you don\'t have that much money'
+    halt erb(:bet)
+  elsif params['bet'].to_i < 0
+    @error = 'Sorry, but we don\'t let you get free money around here. Please enter a positive number!'
+    halt erb(:bet)
+  else
+    session['bet'] = params['bet'].to_i
+    redirect '/game'
+  end
+
+  
 end
 
 get '/game' do
@@ -126,7 +157,7 @@ post '/game/player/hit' do
   elsif player > BLACKJACK_AMOUNT 
     loser!("#{session['username']} busted!")
   end
-  erb :game  
+  erb :game
 end
 
 post '/game/player/stay' do
@@ -149,7 +180,7 @@ get '/game/dealer' do
   elsif dealer >= DEALER_MIN_HIT
     redirect'/game/winner'
   end 
-  erb :game 
+  erb :game
 end
 
 get '/game/winner' do

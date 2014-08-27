@@ -1,3 +1,9 @@
+
+<% if session['total'] == 0 %>
+  <h3> Darn! You are broke!</h3>
+  Time to head to the pawn shop!
+<% else %>
 <h3>Thanks for playing with us today!</h3>
-Maybe it is time to gamble for real at the casinos!
+  Maybe it is time to gamble for real at the casinos!
+<% end %>
 <a href='/set_name'>Start Over?</>

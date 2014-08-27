@@ -1,0 +1,9 @@
+<h3>Place your bet</h3>
+
+<%= session[:username] %> has $<%=session[:total]%>.
+
+<form action='/bet' method='post'>
+  <input type='text' name="bet"/> 
+  <br/>
+  <input type='submit' class="btn"  value="Submit Bet"/>
+</form>
